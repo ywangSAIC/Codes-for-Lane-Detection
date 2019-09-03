@@ -54,12 +54,16 @@ function M.ScaleWH(w, h, interpolation)
    interpolation = interpolation or 'bicubic'
    return function(input, target, exist)
       --- newly added part ---
-      input = image.crop(input, 0, 240, 1640, 590)
+      input = image.crop(input, 140, 430, 1780, 980)
+      input = image.scale(input, 976, 208)
+      --input = image.crop(input, 0, 240, 1640, 590)
       ------------------------
       if target == nil then
          return image.scale(input, w, h, interpolation)
       else
-         target = image.crop(target, 0, 240, 1640, 590)
+         target = image.crop(target, 140, 630, 1780, 880)
+         target= image.scale(target, 976, 208)
+         -- target = image.crop(target, 0, 240, 1640, 590)
          return image.scale(input, w, h, interpolation), image.scale(target, w, h, 'simple'), exist
       end
    end
@@ -103,7 +107,6 @@ end
 -- Random crop form larger image with optional zero padding
 function M.RandomCropLane(w, h, padding)
    padding = padding or 0
-
    return function(input, target, exist)
       if padding > 0 then
          local temp = input.new(3, input:size(2) + 2*padding, input:size(3) + 2*padding)

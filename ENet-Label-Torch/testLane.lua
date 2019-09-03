@@ -12,7 +12,7 @@ local DataLoader = require 'dataloader'
 local checkpoints = require 'checkpoints'
 
 opt = opts.parse(arg)
-show = false    -- Set show to true if you want to visualize. In addition, you need to use qlua instead of th.
+show = false-- Set show to true if you want to visualize. In addition, you need to use qlua instead of th.
 
 checkpoint, optimState = checkpoints.latest(opt)
 model = models.setup(opt, checkpoint)
@@ -87,8 +87,12 @@ for n, sample in valLoader:run() do
    local exist = output[2]:float()
    local outputn
    for b = 1, input:size(1) do
-      print('img: ' .. ffi.string(imgpath[b]:data()))
-      local img = image.load(opt.data .. ffi.string(imgpath[b]:data()), 3, 'float')
+      --print('img: ' .. ffi.string(imgpath[b]:data()))
+      --local img = image.load(opt.data .. ffi.string(imgpath[b]:data()), 3, 'float')
+      local savePath, resPath
+      -- savePath = opt.save .. string.sub(ffi.string(imgpath[b]:data()), 1, -5) .. '_ori.png'
+      -- image.save(savePath, sample.input[b])
+
       outputn = scoremap[{b,{},{},{}}]
       line1 = outputn[{2-offset,{},{}}]
       line2 = outputn[{3-offset,{},{}}]
@@ -100,7 +104,6 @@ for n, sample in valLoader:run() do
       lines[{3,{},{}}] = line3
       lines[{1,{},{}}]:add(line4)
       lines[{3,{},{}}]:add(line4)
-      local savePath, resPath
       local subPath = '.'
       for i = 1,4 do
          savePath = opt.save .. string.sub(ffi.string(imgpath[b]:data()), 1, -5) .. '_' .. i .. '_avg.png'
@@ -117,16 +120,20 @@ for n, sample in valLoader:run() do
             end
          end
          image.save(savePath, outputn[{i+1-offset,{},{}}])
+      savePath = opt.save .. string.sub(ffi.string(imgpath[b]:data()), 1, -5) .. '_ret.png'
+      local img = sample.input[b]*0.4 + lines*3.0
+      image.save(savePath, img)
+          
       end
-      local existPath = opt.save .. string.sub(ffi.string(imgpath[b]:data()), 1, -4) .. 'exist.txt'
-      local f = assert(io.open(existPath, 'w'))
-      for i = 1,4 do
-         if exist[b][i] > 0.5 then
-            f:write('1 ')
-         else
-            f:write('0 ')
-         end
-      end
+      --local existPath = opt.save .. string.sub(ffi.string(imgpath[b]:data()), 1, -4) .. 'exist.txt'
+      --local f = assert(io.open(existPath, 'w'))
+      --for i = 1,4 do
+      --   if exist[b][i] > 0.5 then
+      --      f:write('1 ')
+      --   else
+      --      f:write('0 ')
+      --   end
+      --end
       if show then
          img = sample.input[b]*0.6 + lines*0.8
          image.display(img)

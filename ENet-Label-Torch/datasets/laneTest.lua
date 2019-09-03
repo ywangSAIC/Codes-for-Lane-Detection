@@ -52,6 +52,7 @@ function LaneDataset:preprocess()
          t.ColorNormalize(meanstd),
       }
    elseif self.split == 'val' then
+      print ("preprocess val in lane test")
       return t.Compose{
          t.ScaleWH(976, 208), -- 800, 288
          t.ColorNormalize(meanstd),

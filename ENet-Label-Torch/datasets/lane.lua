@@ -51,11 +51,13 @@ local meanstd = {
 
 function LaneDataset:preprocess()           -- Don't use data augmentation for training RNN
    if self.split == 'train' then
+         print ("preprocess train")
    return t.Compose{
          t.ScaleWH(640, 368),
          t.ColorNormalize(meanstd),
       }
    elseif self.split == 'val' then
+         print ("preprocess val")
       return t.Compose{
          t.ScaleWH(640, 368),
          t.ColorNormalize(meanstd),
@@ -67,6 +69,7 @@ end
 
 function LaneDataset:preprocess_aug()
    if self.split == 'train' then
+         print ("preprocess aug train")
    return t.Compose{
          t.RandomScaleRatio(936, 1018, 194, 224), -- 760, 842, 274, 304
          t.ColorNormalize(meanstd),
@@ -75,6 +78,7 @@ function LaneDataset:preprocess_aug()
          t.RandomCropLane(976, 208), -- 800, 288
       }
    elseif self.split == 'val' then
+         print ("preprocess train")
       return t.Compose{
          t.ScaleWH(976, 208), -- 800, 288
          t.ColorNormalize(meanstd),
