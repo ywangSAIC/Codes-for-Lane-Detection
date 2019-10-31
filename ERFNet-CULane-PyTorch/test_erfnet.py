@@ -16,12 +16,15 @@ from options.options import parser
 import torch.nn.functional as F
 
 best_mIoU = 0
+channel_color = [[0],[1],[2],[0,1]]
+#gamma = 1.0
+#inv_gamma = 1/gamma
+#tabel = np.array( [(( i /255.0) ** inv_gamma) * 255  for i in range(256)]).astype('uint8')
 
 
 def main():
     global args, best_mIoU
     args = parser.parse_args()
-
     os.environ["CUDA_VISIBLE_DEVICES"] = ','.join(str(gpu) for gpu in args.gpus)
     args.gpus = len(args.gpus)
 
@@ -69,8 +72,9 @@ def main():
     # Data loading code
 
     test_loader = torch.utils.data.DataLoader(
-        getattr(ds, args.dataset.replace("CULane", "VOCAug") + 'DataSet')(data_list=args.val_list, transform=torchvision.transforms.Compose([
-            tf.GroupRandomScaleNew(size=(args.img_width, args.img_height), interpolation=(cv2.INTER_LINEAR, cv2.INTER_NEAREST)),
+        getattr(ds, args.dataset.replace("CULane", "VOCAug") + 'DataSet')(dataset_path = args.dataset_path, data_list=args.val_list, transform=torchvision.transforms.Compose([
+            tf.GroupROICrop(ROI=(0, 200, 1920, 850)),
+            tf.GroupRandomScaleNew(size=(args.img_width, args.img_height), interpolation=[cv2.INTER_LINEAR]),
             tf.GroupNormalize(mean=(input_mean, (0, )), std=(input_std, (1, ))),
         ])), batch_size=args.batch_size, shuffle=False, num_workers=args.workers, pin_memory=False)
 
@@ -98,12 +102,9 @@ def validate(val_loader, model, criterion, iter, evaluator, logger=None):
 
     # switch to evaluate mode
     model.eval()
-
     end = time.time()
-    for i, (input, target, img_name) in enumerate(val_loader):
-
+    for i, (input,  img_name) in enumerate(val_loader):
         input_var = torch.autograd.Variable(input, volatile=True)
-
         # compute output
         output, output_exist = model(input_var)
 
@@ -119,14 +120,25 @@ def validate(val_loader, model, criterion, iter, evaluator, logger=None):
             if not os.path.exists(directory):
                 os.makedirs(directory)
             file_exist = open('predicts/vgg_SCNN_DULR_w9'+img_name[cnt].replace('.jpg', '.exist.txt'), 'w')
+            src_img = input_var[cnt].permute(1,2,0).data.cpu().numpy() 
+            #cv2.imwrite('predicts/vgg_SCNN_DULR_w9'+img_name[cnt].replace('.jpg', '_src.jpg'),(input_var[cnt].permute(1,2,0).data.cpu().numpy()) )
+            #cv2.imwrite('predicts/vgg_SCNN_DULR_w9'+img_name[cnt].replace('.jpg', '_src.png'),(pred[cnt][0].reshape((208,976)) * 64).astype('uint8') )
             for num in range(4):
                 prob_map = (pred[cnt][num+1]*255).astype(int)
                 save_img = cv2.blur(prob_map,(9,9))
+                for c in channel_color[num]:
+                    src_img[:,:,c] += prob_map.astype('uint8')
+               
                 cv2.imwrite('predicts/vgg_SCNN_DULR_w9'+img_name[cnt].replace('.jpg', '_'+str(num+1)+'_avg.png'), save_img)
+
                 if pred_exist[cnt][num] > 0.5:
                     file_exist.write('1 ')
                 else:
                     file_exist.write('0 ')
+
+            src_img = cv2.normalize(src_img,None,0,255,cv2.NORM_MINMAX, cv2.CV_8U)
+            #src_img =cv2.LUT(src_img.astype('uint8'), tabel)
+            cv2.imwrite('predicts/vgg_SCNN_DULR_w9'+img_name[cnt].replace('.jpg', '_ret.png'), src_img)
             file_exist.close()
 
         # measure elapsed time

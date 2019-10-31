@@ -5,6 +5,7 @@ parser.add_argument('dataset', type=str, choices=['VOCAug', 'VOC2012', 'COCO', '
 parser.add_argument('method', type=str, choices=['FCN', 'DeepLab', 'DeepLab3', 'PSPNet', 'ERFNet'])
 parser.add_argument('train_list', type=str)
 parser.add_argument('val_list', type=str)
+parser.add_argument('--dataset_path', type=str, default="/home/ywang/dataset/CULane/list",metavar='PATH', help = 'path to dataset')
 
 # ========================= Model Configs ==========================
 parser.add_argument('--arch', type=str, default="resnet101")
