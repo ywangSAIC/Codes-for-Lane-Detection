@@ -88,13 +88,13 @@ class GroupROICrop(object):
     def __call__(self, img_group):
         h, w = img_group[0].shape[0:2]
         x_min, y_min, tw, th = self.ROI
-
+        #[0,    200, 1920, 850]
         out_images = list()
 
-        h1 = max(0, y_min)
-        w1 = max(0, x_min)
-        h2 = min(h1 + th, h)
-        w2 = min(w1 + tw, w)
+        h1 = max(0, y_min)  #200 
+        w1 = max(0, x_min)  # 0
+        h2 = min(h1 + th, h)  #1050
+        w2 = min(w1 + tw, w)  #1920
 
         for img in img_group:
             assert (img.shape[0] == h and img.shape[1] == w)
